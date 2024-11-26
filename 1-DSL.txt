@@ -1,0 +1,123 @@
+workspace "Proyecto DeUna" {
+    model {
+        #se ubica los elementos que se quiere que se visualicen del modelo EC4: elementos
+        user = person "Usuario" {
+        #para crear un modelo promero crea un identificador, quien utiliza el sistema o producto
+            tags "userPerson"
+        }
+        deunaService = softwareSystem "DeUna service" {
+            description "Sistema neobancario de servicios digitales"
+            tags "deunaServices"
+               
+            # core-service
+            coreService = container "core-service" {
+                description "Gestión de usuarios y autenticación"
+                technology "NestJS"
+                tags "internalService"
+                description "Servicio que se encarga de la trnsaccionabilidad de la APP"
+            }
+            
+            coreServiceDataBase = container "core-service-db" {
+                technology "PostgresSql"
+                description "Bases de datos relacional para albergar información de las transacciones"
+                tags "database"
+            }
+            
+            # Notification-service
+            acountService = container "acount-service" {
+                description "Servicio para gestionar notificaciones (push, email, SMS)"
+                technology ".NET"
+                tags "internalService"
+            }
+            
+            acountServiceDataBase = container "acount-service-db" {
+                technology "PostgresSql"
+                description "Bases de datos relacional para albergar información de las cuentas de los usuarios"
+                tags "database"
+            }
+            
+            # User-service
+            usersService = container "users-service" {
+                description "Gestión de usuarios y autenticación"
+                technology "NestJS"
+                tags "internalService"
+                description "servicio que guarda la informaciín del usuario real"
+            }
+            
+            userServiceDataBase = container "user-service-db" {
+                technology "PostgresSql"
+                description "Bases de datos relacional para albergar información de los usuarios"
+                tags "database"
+            }
+            
+            # Notification-service
+            notificationService = container "notification-service" {
+                description "Servicio para gestionar notificaciones (push, email, SMS)"
+                technology ".NET"
+                tags "internalService"
+                description "servicio que nos permite notificar las operaciones que son via sms, emael y puch notification"
+            }
+            
+            cacheServiceDataBase = container "cache-service-db" {
+                technology "Redis"
+                description "Almacenar temporalmente informacion del ususario para notificaciones"
+                tags "database"
+            }
+            
+            coreService -> acountService "obtener cuentas"
+            coreService -> coreServiceDataBase "almacenar transacciones"
+            acountService -> acountServiceDataBase "almacenar cuentas"
+            usersService -> userServiceDataBase "almacenar info del user"
+            notificationService -> cacheServiceDataBase "notificacines via email"
+            
+            
+            notificationService -> usersService "se requiere ela informacion del ussuario para poder notificar"
+            usersService -> acountService "Para poder llamar las operaciones del usuario"
+        }
+        prichincjaService = softwareSystem "Pichincha service" {
+            description "Sistema bancario con APIs del pichincha"
+            tags "externalServices"
+        }
+        
+        user -> deunaService "Transferir y pagar con QR"
+        deunaService -> prichincjaService "Consumir servicios bancarios de la banca digital"
+    }
+    views {
+        #son las opciones de visualizacion de la herramienta
+        systemContext "deunaService" {
+            include *
+            autoLayout tb
+        }
+        
+        container "deunaService" "SoftwareSystem" {
+            description "Vista de contenedores del sistema DeUna"
+            include *
+            autoLayout lr
+        }
+        
+        styles {
+            #son los estilos CSS de los elemntos y no de las vistas
+            element "userPerson" {
+                shape person
+                background #5f4d75
+                color #ffffff
+            }
+            element "deunaServices" {
+                background #2f4d71
+                color #ffffff
+            }
+            element "externalServices" {
+                background #5f4d11
+                color #ffffff
+            }
+            element "internalService" {
+                background #2f4d01
+                color #ffffff
+            }
+            element "database" {
+                shape cylinder
+                background #5f5f75
+            }
+        }
+    }
+}
